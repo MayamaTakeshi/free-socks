@@ -1,0 +1,28 @@
+-------------------------------
+2023/12/10 takeshi:
+
+Added outbound sample (but method 'new' had to be added to EventSocket).
+It mostly works but we need to implement support for text/events-plain and text/events-json:
+
+takeshi@3de0df5e5c46:~/src/free-socks$ cargo run --example outbound
+... ABRIDGED ...
+warning: `free-socks` (example "outbound") generated 6 warnings (run `cargo fix --example "outbound"` to apply 6 suggestions)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+     Running `target/debug/examples/outbound`
+Listening on: 127.0.0.1:8084
+connection accepted
+Sending connect
+Err(Parse error: `%2BOK%0A`)
+Sending myevents
+Ok(Some("Events Enabled"))
+Sending answer
+Ok(None)
+Sending send_dtmf
+Ok(None)
+thread 'tokio-runtime-worker' panicked at 'not yet implemented: Unexpected content type: text/event-plain', src/event_socket/driver.rs:145:13
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+Sending hangup
+Err(channel closed)
+^[[A^C
+takeshi@3de0df5e5c46:~/src/free-socks$ 
+

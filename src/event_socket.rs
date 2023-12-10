@@ -64,6 +64,41 @@ impl Future for EventSocket {
 const MAX_QUEUE_SIZE: usize = 256;
 
 impl EventSocket {
+    pub fn new(
+        stream: TcpStream,
+        keepalive_interval: impl Into<Option<Duration>>,
+    ) -> EventSocket {
+        let (driver_sender, driver_rx) = mpsc::channel(MAX_QUEUE_SIZE);
+
+        let (tcp_receive, tcp_write) = stream.into_split();
+
+        let mut reader = EventReader::new(tcp_receive);
+
+        // Spawn the event socket.
+        //
+        // ADR: This is for convenience so that callers don't need to drive the async function and
+        // can simply send API requests.
+        let driver_tx_socket = driver_sender.clone();
+        let keepalive_interval = keepalive_interval.into();
+        let event_socket = spawn(async move {
+            event_socket(
+                keepalive_interval,
+                reader,
+                tcp_write,
+                driver_rx,
+                driver_tx_socket,
+            )
+            .await
+        });
+
+        let socket = EventSocket {
+            driver_tx: driver_sender,
+            event_socket,
+        };
+
+        socket
+    }
+
     pub async fn connect(
         endpoint: impl ToSocketAddrs,
         keepalive_interval: impl Into<Option<Duration>>,
